@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pouminion Interativo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #F7F9FC;
+            --primary-color: #5C6BC0; /* Azul Amigável */
+            --primary-dark: #3949AB;
+            --accent-color: #FF7043; /* Laranja-Coral */
+            --text-color: #424242;
+            --light-grey: #E0E0E0;
+            --white: #FFFFFF;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: var(--bg-color);
+            font-family: 'Nunito', sans-serif;
+            overflow: hidden;
+            touch-action: none;
+            position: relative;
+            color: var(--text-color);
+        }
+
+        /* --- Interface Geral --- */
+        #top-bar, #bottom-bar {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background-color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            box-sizing: border-box;
+            z-index: 20;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        #top-bar { top: 0; justify-content: space-between; }
+        #bottom-bar { bottom: 0; justify-content: space-around; }
+        
+        .info-display { background-color: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 8px 16px; font-size: 16px; font-weight: 700; color: var(--primary-dark); }
+        .bottom-icon { text-align: center; font-size: 12px; font-weight: 700; color: var(--white); cursor: pointer; padding: 4px; border-radius: 8px; transition: background-color 0.2s ease; }
+        .bottom-icon:hover { background-color: rgba(255, 255, 255, 0.1); }
+        .bottom-icon img { width: 32px; height: 32px; display: block; margin: 0 auto 4px; object-fit: contain; }
+        
+        /* --- Game Container e Pouminion Principal --- */
+        #game-container { position: relative; width: 100vw; height: calc(100vh - 120px); display: flex; justify-content: center; align-items: center; }
+        #pouminion-wrapper { position: relative; width: 250px; height: 250px; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+        #pou-body { position: absolute; width: 100%; height: 100%; z-index: 1; object-fit: contain; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.15)); transition: filter 0.5s ease; }
+        #eyes-container { position: absolute; top: -5%; left: 50%; transform: translateX(-50%); width: 220px; height: 100px; overflow: hidden; z-index: 3; }
+        #pou-eyes { position: absolute; width: 100%; height: auto; top: 0; left: 0; transition: transform 0.05s linear; }
+        #pou-mouth { position: absolute; width: 40px; height: 3px; background-color: #3e221a; border-radius: 0 0 35px 35px; bottom: 40%; left: 50%; transform: translateX(-50%); z-index: 2; transition: height 0.15s ease-out, width 0.15s ease-out; }
+        #pou-mouth.open { height: 20px; width: 40px; border-radius: 0 0 40px 40px; }
+        #accessory-display {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            top: -25%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 4;
+            pointer-events: none;
+            object-fit: contain;
+            display: none;
+        }
+
+        #food { position: absolute; width: 60px; height: 60px; cursor: grab; z-index: 50; display: none; pointer-events: none; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2)); }
+        #food img { width: 100%; height: 100%; object-fit: contain; }
+        
+        #inventory-display {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex;
+            align-items: center; gap: 15px; z-index: 30;
+        }
+        .inventory-arrow {
+            font-size: 28px; font-weight: 900; color: var(--primary-color); background-color: var(--white);
+            border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center;
+            align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); cursor: pointer; user-select: none;
+            transition: transform 0.1s ease-in-out, box-shadow 0.2s ease;
+        }
+        .inventory-arrow:hover { box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+        .inventory-arrow:active { transform: scale(0.9); }
+
+        #food-slot-container {
+            position: relative; width: 70px; height: 70px; background-color: var(--white);
+            border: 3px solid var(--primary-color); border-radius: 50%; display: flex; justify-content: center;
+            align-items: center; cursor: grab; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        #food-slot-container:active { cursor: grabbing; }
+        #slot-food-img { width: 80%; height: 80%; object-fit: contain; }
+        #slot-food-quantity {
+            position: absolute; bottom: -2px; right: -2px; background-color: var(--accent-color);
+            color: white; border-radius: 50%; width: 28px; height: 28px; font-size: 16px;
+            display: flex; justify-content: center; align-items: center; font-weight: 700; border: 3px solid white;
+        }
+
+        /* --- MODAIS --- */
+        .modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); z-index: 100; display: none;
+            justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background-color: var(--white); border-radius: 20px; padding: 25px;
+            width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative; max-height: 80vh; overflow-y: auto;
+        }
+        .modal-title { text-align: center; margin-top: 0; color: var(--primary-dark); font-weight: 900; }
+        .close-modal-btn {
+            position: absolute; top: 15px; right: 20px; font-size: 32px;
+            cursor: pointer; color: var(--light-grey); font-weight: 400; transition: transform 0.2s ease, color 0.2s ease;
+        }
+        .close-modal-btn:hover { transform: rotate(90deg); color: var(--accent-color); }
+        
+        .grid-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .grid-item {
+            background-color: var(--bg-color); border: 2px solid var(--light-grey); border-radius: 15px;
+            padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s;
+            display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+        }
+        .grid-item:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); border-color: var(--primary-color); }
+        .grid-item.disabled { opacity: 0.6; cursor: not-allowed; background-color: #f5f5f5; }
+        .grid-item.disabled:hover { transform: none; box-shadow: none; border-color: var(--light-grey); }
+        .grid-item.owned { border-color: var(--accent-color); background-color: #fff8e1; }
+        .grid-item.equipped { border-color: var(--primary-dark); border-width: 3px; box-shadow: 0 0 15px rgba(92, 107, 192, 0.5); }
+        .grid-item img { width: 50px; height: 50px; object-fit: contain; margin-bottom: 5px; }
+        .item-name { font-size: 14px; font-weight: 700; min-height: 30px; display: flex; align-items: center; justify-content: center; flex-grow: 1;}
+        .item-price, .item-stock { font-weight: 700; }
+        .item-price { color: var(--accent-color); font-size: 18px; }
+        .item-stock { font-size: 12px; color: #757575; margin-top: 5px; }
+        .category-title { font-weight: 900; color: var(--primary-dark); margin: 20px 0 10px 0; border-bottom: 2px solid var(--light-grey); padding-bottom: 5px; }
+
+        .color-ball {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-bottom: 5px;
+            border: 2px solid rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .color-ball.blue { background-color: #00BFFF; }
+        .color-ball.pink { background-color: #FF69B4; }
+        .color-ball.green { background-color: #32CD32; }
+        .color-ball.orange { background-color: #FFA500; }
+        .color-ball.purple { background-color: #8A2BE2; }
+        
+        .grid-item.equipped .color-ball { border: 3px solid var(--primary-dark); }
+        .grid-item.owned .color-ball { border: 2px solid var(--accent-color); }
+        .color-ball.default {
+            background: linear-gradient(45deg, #FFD700 25%, #8A2BE2 25%, #8A2BE2 50%, #32CD32 50%, #32CD32 75%, #FF69B4 75%);
+        }
+
+        /* --- JOGO: CHUVA DE COMIDAS --- */
+        #food-rain-game {
+            width: 100%; height: 100%; background: linear-gradient(to bottom, #81D4FA, #E1F5FE);
+            overflow: hidden; position: relative; display: flex; justify-content: center;
+        }
+        .game-item {
+            position: absolute; width: 50px; height: 50px;
+            background-size: contain; background-repeat: no-repeat; z-index: 5;
+        }
+        #game-player-container {
+            position: absolute; width: 100px; height: 100px; bottom: 60px;
+            left: 50%; transform: translateX(-50%); z-index: 10;
+            background-image: url('https://github.com/alexcarequinha/aiai/blob/main/minionjogocomida.png?raw=true');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        #game-player-mouth {
+            position: absolute; width: 40px; height: 20px; background-color: #3e221a;
+            border-radius: 0 0 40px 40px; bottom: 35%; left: 50%;
+            transform: translateX(-50%); z-index: 11;
+        }
+        #game-score, #game-over-screen {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            font-size: 24px; font-weight: 900; color: var(--primary-dark);
+            text-shadow: 0 2px 3px var(--white); z-index: 20;
+        }
+        #game-over-screen {
+            top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(255,255,255,0.8);
+            padding: 20px; border-radius: 15px; text-align: center; display: none; z-index: 20;
+        }
+        #game-over-screen button {
+            background-color: var(--accent-color); color: var(--white); border: none;
+            border-radius: 10px; padding: 10px 20px; font-size: 18px;
+            font-weight: 700; cursor: pointer; margin-top: 15px;
+        }
+
+        @media (max-width: 600px) {
+            #top-bar, #bottom-bar { height: 55px; }
+            #game-container { height: calc(100vh - 110px); }
+            #pouminion-wrapper { width: 200px; height: 200px; }
+            #game-player-container { width: 80px; height: 80px; bottom: 50px;}
+        }
+    </style>
+</head>
+<body>
+    <div id="top-bar">
+        <div id="money-display" class="info-display"></div>
+        <div></div>
+    </div>
+
+    <div id="game-container">
+        <div id="pouminion-wrapper">
+            <img id="accessory-display" src="">
+            <div id="eyes-container"><img id="pou-eyes" src="https://github.com/alexcarequinha/aiai/blob/main/olhominio.png?raw=true" alt="Olhos do Pouminion"></div>
+            <img id="pou-body" src="https://github.com/alexcarequinha/aiai/blob/main/corpominio.png?raw=true" alt="Corpo do Pouminion">
+            <div id="pou-mouth"></div>
+        </div>
+        
+        <div id="inventory-display">
+            <span class="inventory-arrow" id="prev-food-btn">◀</span>
+            <div id="food-slot-container">
+                <img id="slot-food-img" src="">
+                <span id="slot-food-quantity"></span>
+            </div>
+            <span class="inventory-arrow" id="next-food-btn">▶</span>
+        </div>
+        
+        <div id="food"><img id="food-img" src=""></div>
+    </div>
+    
+    <div id="fridge-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-fridge-btn" class="close-modal-btn">&times;</span>
+            <h2 class="modal-title">Geladeira</h2>
+            <div id="fridge-items" class="grid-items"></div>
+        </div>
+    </div>
+    
+    <div id="store-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-store-btn" class="close-modal-btn">&times;</span>
+            <h2 class="modal-title">Loja</h2>
+            <div id="store-items"></div>
+        </div>
+    </div>
+
+    <div id="closet-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-closet-btn" class="close-modal-btn">&times;</span>
+            <h2 class="modal-title">Guarda-Roupa</h2>
+            <div id="closet-items"></div>
+        </div>
+    </div>
+
+    <div id="game-modal" class="modal">
+        <div id="food-rain-game" class="modal-content">
+            <span id="close-game-btn" class="close-modal-btn">&times;</span>
+            <div id="game-score">Pontos: 0</div>
+            <div id="game-player-container">
+                <div id="game-player-mouth"></div>
+            </div>
+            <div id="game-over-screen">
+                <h2>Fim de Jogo!</h2>
+                <p>Pontuação Final: <span id="final-score">0</span></p>
+                <p>Dinheiro Ganho: 💰<span id="money-won">0</span></p>
+                <button id="restart-game-btn">Jogar Novamente</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bottom-bar">
+        <div id="home-button" class="bottom-icon"> <img src="https://static.vecteezy.com/system/resources/thumbnails/037/829/744/small/ai-generated-house-on-transparent-background-png.png" alt="Casa"> Casa </div>
+        <div id="kitchen-button" class="bottom-icon"> <img src="https://png.pngtree.com/png-vector/20221121/ourmid/pngtree-silver-mini-fridge-illustration-png-image_6472828.png" alt="Cozinha"> Cozinha </div>
+        <div id="store-button" class="bottom-icon"> <img src="https://cdn-icons-png.flaticon.com/512/1356/1356559.png" alt="Loja"> Loja </div>
+        <div id="games-button" class="bottom-icon"> <img src="https://static.vecteezy.com/system/resources/previews/043/016/304/non_2x/ai-generated-3d-rendering-of-a-game-controller-on-transparent-background-ai-generated-free-png.png" alt="Controle de Jogo"> Jogos </div>
+    </div>
+
+    <script>
+        // --- SELEÇÃO DE ELEMENTOS ---
+        const moneyDisplay = document.getElementById('money-display');
+        const pouminionWrapper = document.getElementById('pouminion-wrapper');
+        const pouBody = document.getElementById('pou-body');
+        const eyesImg = document.getElementById('pou-eyes');
+        const mouth = document.getElementById('pou-mouth');
+        const accessoryDisplay = document.getElementById('accessory-display');
+        const food = document.getElementById('food');
+        const foodImg = document.getElementById('food-img');
+        const foodSlotContainer = document.getElementById('food-slot-container');
+        const slotFoodImg = document.getElementById('slot-food-img');
+        const slotFoodQuantity = document.getElementById('slot-food-quantity');
+        const prevFoodBtn = document.getElementById('prev-food-btn');
+        const nextFoodBtn = document.getElementById('next-food-btn');
+        const kitchenButton = document.getElementById('kitchen-button');
+        const fridgeModal = document.getElementById('fridge-modal');
+        const closeFridgeBtn = document.getElementById('close-fridge-btn');
+        const fridgeItemsContainer = document.getElementById('fridge-items');
+        const storeButton = document.getElementById('store-button');
+        const storeModal = document.getElementById('store-modal');
+        const closeStoreBtn = document.getElementById('close-store-btn');
+        const storeItemsContainer = document.getElementById('store-items');
+        const homeButton = document.getElementById('home-button');
+        const closetModal = document.getElementById('closet-modal');
+        const closeClosetBtn = document.getElementById('close-closet-btn');
+        const closetItemsContainer = document.getElementById('closet-items');
+        const gamesButton = document.getElementById('games-button');
+        const gameModal = document.getElementById('game-modal');
+        const closeGameBtn = document.getElementById('close-game-btn');
+
+        // --- ESTADO DO JOGO ---
+        let money = 500;
+        let isDragging = false;
+        
+        const nearMouthSound = new Audio('https://github.com/alexcarequinha/aiai/raw/main/comida%20na%20boca.mp3');
+        const eatingSound = new Audio('https://github.com/alexcarequinha/aiai/raw/main/comendo.mp3');
+        
+        const foods = [
+            { id: 'banana', name: 'Banana', price: 10, imageSrc: 'https://upload.wikimedia.org/wikipedia/commons/6/69/Banana.png' },
+            { id: 'bomba', name: 'Bomba', price: 30, imageSrc: 'https://static.vecteezy.com/system/resources/thumbnails/009/350/665/small_2x/explosive-bomb-black-png.png' },
+            { id: 'calabreso', name: 'Calabreso', price: 70, imageSrc: 'https://github.com/alexcarequinha/aiai/blob/main/cabecograma-330x270-davi.png?raw=true' }
+        ];
+
+        const storeItems = [
+            { id: 'pocao_azul', name: 'Poção Azul', price: 80, type: 'color', cssClass: 'blue', value: 'hue-rotate(180deg)' },
+            { id: 'pocao_rosa', name: 'Poção Rosa', price: 80, type: 'color', cssClass: 'pink', value: 'hue-rotate(300deg)' },
+            { id: 'pocao_verde', name: 'Poção Verde', price: 80, type: 'color', cssClass: 'green', value: 'hue-rotate(90deg)' },
+            { id: 'pocao_laranja', name: 'Poção Laranja', price: 80, type: 'color', cssClass: 'orange', value: 'hue-rotate(-25deg)' },
+            { id: 'pocao_roxa', name: 'Poção Roxa', price: 80, type: 'color', cssClass: 'purple', value: 'hue-rotate(240deg)' },
+        ];
+
+        let playerInventory = { 'banana': 0, 'bomba': 0, 'calabreso': 0 };
+        let playerCloset = { 'accessory': [], 'color': [] };
+        let equippedItems = { 'accessory': null, 'color': null };
+        
+        let availableFoods = [];
+        let selectedFoodIndex = 0;
+
+        // --- LÓGICA DE CUSTOMIZAÇÃO (LOJA E GUARDA-ROUPA) ---
+        function openStore() { populateStore(); storeModal.style.display = 'flex'; }
+        function closeStore() { storeModal.style.display = 'none'; }
+        function openCloset() { populateCloset(); closetModal.style.display = 'flex'; }
+        function closeCloset() { closetModal.style.display = 'none'; }
+
+        function populateStore() {
+            storeItemsContainer.innerHTML = '';
+            const accessories = storeItems.filter(item => item.type === 'accessory');
+            const colors = storeItems.filter(item => item.type === 'color');
+            
+            if (accessories.length > 0) {
+                storeItemsContainer.innerHTML += `<h3 class="category-title">Acessórios</h3><div id="store-accessories" class="grid-items"></div>`;
+                const accessoriesContainer = document.getElementById('store-accessories');
+                accessories.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'grid-item';
+                    if (money < item.price) itemDiv.classList.add('disabled');
+                    if (playerCloset.accessory.includes(item.id)) itemDiv.classList.add('owned');
+                    itemDiv.innerHTML = `<img src="${item.imageSrc}" alt="${item.name}"><div class="item-name">${item.name}</div><div class="item-price">💰 ${item.price}</div>`;
+                    itemDiv.addEventListener('click', () => buyStoreItem(item));
+                    accessoriesContainer.appendChild(itemDiv);
+                });
+            }
+
+            if (colors.length > 0) {
+                storeItemsContainer.innerHTML += `<h3 class="category-title">Cores</h3><div id="store-colors" class="grid-items"></div>`;
+                const colorsContainer = document.getElementById('store-colors');
+                colors.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'grid-item';
+                    if (money < item.price) itemDiv.classList.add('disabled');
+                    if (playerCloset.color.includes(item.id)) itemDiv.classList.add('owned');
+                    itemDiv.innerHTML = `<div class="color-ball ${item.cssClass}"></div><div class="item-name">${item.name}</div><div class="item-price">💰 ${item.price}</div>`;
+                    itemDiv.addEventListener('click', () => buyStoreItem(item));
+                    colorsContainer.appendChild(itemDiv);
+                });
+            }
+        }
+        function buyStoreItem(item) {
+            if (playerCloset[item.type].includes(item.id)) { return; } // Não mostra mais alert se já possui
+            if (money >= item.price) {
+                money -= item.price;
+                playerCloset[item.type].push(item.id);
+                updateMoneyDisplay();
+                populateStore();
+                // ALERT REMOVIDO
+            } else { alert("Dinheiro insuficiente!"); }
+        }
+        function populateCloset() {
+            closetItemsContainer.innerHTML = '';
+            const accessories = storeItems.filter(i => i.type === 'accessory' && playerCloset.accessory.includes(i.id));
+            const colors = storeItems.filter(i => i.type === 'color' && playerCloset.color.includes(i.id));
+
+            if (accessories.length > 0 || playerCloset.accessory.length > 0) {
+                closetItemsContainer.innerHTML += `<h3 class="category-title">Acessórios</h3><div id="closet-accessories" class="grid-items"></div>`;
+                const accessoriesContainer = document.getElementById('closet-accessories');
+                const unequipAccessoryBtn = document.createElement('div');
+                unequipAccessoryBtn.className = 'grid-item';
+                if (equippedItems.accessory === null) unequipAccessoryBtn.classList.add('equipped');
+                unequipAccessoryBtn.innerHTML = `<img src="https://i.imgur.com/sFcyhTj.png" alt="Nenhum"><div class="item-name">Nenhum</div>`;
+                unequipAccessoryBtn.addEventListener('click', () => equipItem(null, 'accessory'));
+                accessoriesContainer.appendChild(unequipAccessoryBtn);
+                accessories.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'grid-item';
+                    if (equippedItems.accessory === item.id) itemDiv.classList.add('equipped');
+                    itemDiv.innerHTML = `<img src="${item.imageSrc}" alt="${item.name}"><div class="item-name">${item.name}</div>`;
+                    itemDiv.addEventListener('click', () => equipItem(item.id, 'accessory'));
+                    accessoriesContainer.appendChild(itemDiv);
+                });
+            }
+            
+            closetItemsContainer.innerHTML += `<h3 class="category-title">Cores</h3><div id="closet-colors" class="grid-items"></div>`;
+            const colorsContainer = document.getElementById('closet-colors');
+            const unequipColorBtn = document.createElement('div');
+            unequipColorBtn.className = 'grid-item';
+            if (equippedItems.color === null) unequipColorBtn.classList.add('equipped');
+            unequipColorBtn.innerHTML = `<div class="color-ball default"></div><div class="item-name">Padrão</div>`;
+            unequipColorBtn.addEventListener('click', () => equipItem(null, 'color'));
+            colorsContainer.appendChild(unequipColorBtn);
+            colors.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'grid-item';
+                if (equippedItems.color === item.id) itemDiv.classList.add('equipped');
+                itemDiv.innerHTML = `<div class="color-ball ${item.cssClass}"></div><div class="item-name">${item.name}</div>`;
+                itemDiv.addEventListener('click', () => equipItem(item.id, 'color'));
+                colorsContainer.appendChild(itemDiv);
+            });
+        }
+        function equipItem(itemId, itemType) {
+            equippedItems[itemType] = itemId;
+            applyEquippedItems();
+            populateCloset();
+        }
+        function applyEquippedItems() {
+            if (equippedItems.accessory) {
+                const item = storeItems.find(i => i.id === equippedItems.accessory);
+                accessoryDisplay.src = item.imageSrc;
+                accessoryDisplay.style.display = 'block';
+            } else {
+                accessoryDisplay.src = '';
+                accessoryDisplay.style.display = 'none';
+            }
+            if (equippedItems.color) {
+                const item = storeItems.find(i => i.id === equippedItems.color);
+                pouBody.style.filter = `drop-shadow(0 5px 10px rgba(0,0,0,0.15)) ${item.value}`;
+            } else {
+                pouBody.style.filter = 'drop-shadow(0 5px 10px rgba(0,0,0,0.15))';
+            }
+        }
+        
+        // --- LÓGICA DO INVENTÁRIO DE COMIDA ---
+        function updateAvailableFoodsList() {
+            const previouslySelected = availableFoods[selectedFoodIndex];
+            availableFoods = foods.filter(food => playerInventory[food.id] > 0);
+            const newIndex = previouslySelected ? availableFoods.findIndex(f => f.id === previouslySelected.id) : -1;
+            selectedFoodIndex = (newIndex !== -1) ? newIndex : 0;
+            if (selectedFoodIndex >= availableFoods.length) { selectedFoodIndex = 0; }
+        }
+        function updateFoodSlotDisplay() {
+            const hasFood = availableFoods.length > 0;
+            document.getElementById('inventory-display').style.visibility = hasFood ? 'visible' : 'hidden';
+            if (hasFood) {
+                const selectedFood = availableFoods[selectedFoodIndex];
+                slotFoodImg.src = selectedFood.imageSrc;
+                slotFoodQuantity.textContent = playerInventory[selectedFood.id];
+            }
+        }
+        function cycleNextFood() { if (availableFoods.length > 1) { selectedFoodIndex = (selectedFoodIndex + 1) % availableFoods.length; updateFoodSlotDisplay(); } }
+        function cyclePrevFood() { if (availableFoods.length > 1) { selectedFoodIndex = (selectedFoodIndex - 1 + availableFoods.length) % availableFoods.length; updateFoodSlotDisplay(); } }
+        
+        // --- LÓGICA DA GELADEIRA ---
+        function updateMoneyDisplay() { moneyDisplay.innerHTML = `💰 ${money}`; }
+        function openFridge() { populateFridge(); fridgeModal.style.display = 'flex'; }
+        function closeFridge() { fridgeModal.style.display = 'none'; }
+        function populateFridge() {
+            fridgeItemsContainer.innerHTML = '';
+            foods.forEach(foodItem => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'grid-item';
+                if (money < foodItem.price) { itemDiv.classList.add('disabled'); }
+                itemDiv.innerHTML = `<img src="${foodItem.imageSrc}" alt="${foodItem.name}"><div class="item-name">${foodItem.name}</div><div class="item-price">💰 ${foodItem.price}</div><div class="item-stock">Estoque: ${playerInventory[foodItem.id]}</div>`;
+                itemDiv.addEventListener('click', () => buyFood(foodItem));
+                fridgeItemsContainer.appendChild(itemDiv);
+            });
+        }
+        function buyFood(foodItem) {
+            if (money >= foodItem.price) {
+                money -= foodItem.price;
+                playerInventory[foodItem.id]++;
+                updateMoneyDisplay();
+                updateAvailableFoodsList();
+                updateFoodSlotDisplay();
+                populateFridge();
+            } else { alert("Dinheiro insuficiente!"); }
+        }
+        
+        // --- LÓGICA DE ARRASTAR COMIDA ---
+        function startDrag(event) {
+            if (availableFoods.length === 0) return;
+            isDragging = true;
+            const selectedFood = availableFoods[selectedFoodIndex];
+            foodImg.src = selectedFood.imageSrc;
+            food.style.display = 'block';
+            const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+            const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+            food.style.left = `${clientX - food.offsetWidth / 2}px`;
+            food.style.top = `${clientY - food.offsetHeight / 2}px`;
+            if (event.cancelable) event.preventDefault();
+        }
+        function stopDrag() { if (isDragging) { isDragging = false; checkIfFed(); food.style.display = 'none'; } }
+        function drag(event) {
+            if (!isDragging) return;
+            let clientX = event.touches ? event.touches[0].clientX : event.clientX;
+            let clientY = event.touches ? event.touches[0].clientY : event.clientY;
+            food.style.left = `${clientX - food.offsetWidth / 2}px`;
+            food.style.top = `${clientY - food.offsetHeight / 2}px`;
+            const foodRect = food.getBoundingClientRect();
+            const foodCenterX = foodRect.left + foodRect.width / 2;
+            const foodCenterY = foodRect.top + foodRect.height / 2;
+            updateEyesPosition(foodCenterX, foodCenterY);
+            updateMouthState(foodCenterX, foodCenterY);
+            if (event.cancelable) event.preventDefault();
+        }
+        
+        // --- LÓGICA DE INTERAÇÃO (POUMINION PRINCIPAL) ---
+        function updateEyesPosition(foodX, foodY) {
+            if (!isDragging) return;
+            const pouRect = pouminionWrapper.getBoundingClientRect();
+            const pouCenterX = pouRect.left + pouRect.width / 2; const pouCenterY = pouRect.top + pouRect.height * 0.4;
+            const deltaX = foodX - pouCenterX; const deltaY = foodY - pouCenterY;
+            const maxEyeMovement = 7;
+            const distance = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
+            let moveX = 0, moveY = 0;
+            if (distance > 0) { moveX = (deltaX / distance) * Math.min(distance, maxEyeMovement); moveY = (deltaY / distance) * Math.min(distance, maxEyeMovement); }
+            eyesImg.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        }
+        function updateMouthState(foodCenterX, foodCenterY) {
+            if (!isDragging) return;
+            const mouthRect = mouth.getBoundingClientRect();
+            const mouthCenterX = mouthRect.left + mouthRect.width / 2; const mouthCenterY = mouthRect.top + mouthRect.height / 2;
+            const distance = Math.sqrt(Math.pow(foodCenterX - mouthCenterX, 2) + Math.pow(foodCenterY - mouthCenterY, 2));
+            if (distance < 70) {
+                if (!mouth.classList.contains('open')) { mouth.classList.add('open'); nearMouthSound.play(); }
+            } else { mouth.classList.remove('open'); }
+        }
+        function checkIfFed() {
+            const foodRect = food.getBoundingClientRect();
+            const mouthRect = mouth.getBoundingClientRect();
+            const isOverlapping = !(foodRect.right < mouthRect.left || foodRect.left > mouthRect.right || foodRect.bottom < mouthRect.top || foodRect.top > mouthRect.bottom);
+            if (isOverlapping && mouth.classList.contains('open')) {
+                eatingSound.play();
+                const fedFood = availableFoods[selectedFoodIndex];
+                playerInventory[fedFood.id]--;
+                updateAvailableFoodsList();
+                updateFoodSlotDisplay();
+            }
+            mouth.classList.remove('open');
+        }
+
+        // --- LÓGICA DO JOGO "CHUVA DE COMIDAS" ---
+        const gameArea = document.getElementById('food-rain-game');
+        const gamePlayerContainer = document.getElementById('game-player-container');
+        const gameScoreDisplay = document.getElementById('game-score');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const moneyWonDisplay = document.getElementById('money-won');
+        const restartGameBtn = document.getElementById('restart-game-btn');
+        let gameInterval, gameScore, gameActive;
+        function startGame() {
+            gameScore = 0; gameActive = true;
+            gameScoreDisplay.textContent = `Pontos: 0`;
+            gameOverScreen.style.display = 'none';
+            const oldItems = gameArea.querySelectorAll('.game-item');
+            oldItems.forEach(item => item.remove());
+            gameInterval = setInterval(() => { if(gameActive) createGameItem(); }, 1000);
+            requestAnimationFrame(gameLoop);
+        }
+        function createGameItem() {
+            const item = document.createElement('div');
+            item.className = 'game-item';
+            const randomChance = Math.random();
+            let chosenFood;
+            if (randomChance < 0.45) { chosenFood = foods[0]; item.dataset.points = 10;
+            } else if (randomChance < 0.9) { chosenFood = foods[2]; item.dataset.points = 25;
+            } else { chosenFood = foods[1]; item.dataset.points = 'bomb'; }
+            item.style.backgroundImage = `url('${chosenFood.imageSrc}')`;
+            item.style.left = `${Math.random() * (gameArea.clientWidth - 50)}px`;
+            item.style.top = '-50px';
+            gameArea.appendChild(item);
+        }
+        function gameLoop() {
+            if (!gameActive) return;
+            const playerRect = gamePlayerContainer.getBoundingClientRect();
+            const items = gameArea.querySelectorAll('.game-item');
+            items.forEach(item => {
+                let top = parseFloat(item.style.top); top += 5; item.style.top = `${top}px`;
+                const itemRect = item.getBoundingClientRect();
+                if (itemRect.bottom > playerRect.top && itemRect.top < playerRect.bottom && itemRect.right > playerRect.left && itemRect.left < playerRect.right) {
+                    if (item.dataset.points === 'bomb') { endGame(); } else { gameScore += parseInt(item.dataset.points); gameScoreDisplay.textContent = `Pontos: ${gameScore}`; item.remove(); }
+                }
+                if (top > gameArea.clientHeight) { item.remove(); }
+            });
+            requestAnimationFrame(gameLoop);
+        }
+        function endGame() {
+            gameActive = false;
+            clearInterval(gameInterval);
+            const moneyEarned = Math.floor(gameScore / 10);
+            money += moneyEarned;
+            updateMoneyDisplay();
+            finalScoreDisplay.textContent = gameScore;
+            moneyWonDisplay.textContent = moneyEarned;
+            gameOverScreen.style.display = 'block';
+        }
+        function moveGamePlayer(event) {
+            if (!gameActive) return;
+            const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+            const gameAreaRect = gameArea.getBoundingClientRect();
+            const playerWidth = gamePlayerContainer.offsetWidth;
+            let newLeft = clientX - gameAreaRect.left - (playerWidth / 2);
+            newLeft = Math.max(0, newLeft);
+            newLeft = Math.min(gameAreaRect.width - playerWidth, newLeft);
+            gamePlayerContainer.style.left = `${newLeft}px`;
+        }
+        
+        // --- EVENT LISTENERS GERAIS ---
+        homeButton.addEventListener('click', openCloset);
+        closeClosetBtn.addEventListener('click', closeCloset);
+        storeButton.addEventListener('click', openStore);
+        closeStoreBtn.addEventListener('click', closeStore);
+        prevFoodBtn.addEventListener('click', cyclePrevFood);
+        nextFoodBtn.addEventListener('click', cycleNextFood);
+        foodSlotContainer.addEventListener('mousedown', startDrag);
+        foodSlotContainer.addEventListener('touchstart', startDrag, { passive: false });
+        window.addEventListener('mouseup', stopDrag);
+        window.addEventListener('touchend', stopDrag);
+        window.addEventListener('mousemove', drag);
+        window.addEventListener('touchmove', drag, { passive: false });
+        kitchenButton.addEventListener('click', openFridge);
+        closeFridgeBtn.addEventListener('click', closeFridge);
+        gameArea.addEventListener('mousemove', moveGamePlayer);
+        gameArea.addEventListener('touchmove', moveGamePlayer, { passive: false });
+        gamesButton.addEventListener('click', () => { gameModal.style.display = 'flex'; startGame(); });
+        closeGameBtn.addEventListener('click', () => { gameModal.style.display = 'none'; endGame(); });
+        restartGameBtn.addEventListener('click', startGame);
+
+        // --- INICIALIZAÇÃO ---
+        window.addEventListener('load', () => {
+            updateMoneyDisplay();
+            updateAvailableFoodsList();
+            updateFoodSlotDisplay();
+            applyEquippedItems();
+        });
+    </script>
+</body>
+</html>
