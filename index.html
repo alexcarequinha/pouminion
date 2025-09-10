@@ -274,10 +274,10 @@
     </div>
 
     <div id="bottom-bar">
-        <div id="home-button" class="bottom-icon"> <img src="https://static.vecteezy.com/system/resources/thumbnails/037/829/744/small/ai-generated-house-on-transparent-background-png.png" alt="Casa"> Casa </div>
-        <div id="kitchen-button" class="bottom-icon"> <img src="https://png.pngtree.com/png-vector/20221121/ourmid/pngtree-silver-mini-fridge-illustration-png-image_6472828.png" alt="Cozinha"> Cozinha </div>
-        <div id="store-button" class="bottom-icon"> <img src="https://cdn-icons-png.flaticon.com/512/1356/1356559.png" alt="Loja"> Loja </div>
-        <div id="games-button" class="bottom-icon"> <img src="https://static.vecteezy.com/system/resources/previews/043/016/304/non_2x/ai-generated-3d-rendering-of-a-game-controller-on-transparent-background-ai-generated-free-png.png" alt="Controle de Jogo"> Jogos </div>
+        <div id="home-button" class="bottom-icon"> <img src="https://github.com/alexcarequinha/aiai/blob/main/casa.png?raw=true" alt="Casa"> Casa </div>
+        <div id="kitchen-button" class="bottom-icon"> <img src="https://github.com/alexcarequinha/aiai/blob/main/geladeira.png?raw=true" alt="Cozinha"> Cozinha </div>
+        <div id="store-button" class="bottom-icon"> <img src="https://github.com/alexcarequinha/aiai/blob/main/loja.png?raw=true" alt="Loja"> Loja </div>
+        <div id="games-button" class="bottom-icon"> <img src="https://github.com/alexcarequinha/aiai/blob/main/jogos.png?raw=true" alt="Controle de Jogo"> Jogos </div>
     </div>
 
     <script>
@@ -318,9 +318,10 @@
         const nearMouthSound = new Audio('https://github.com/alexcarequinha/aiai/raw/main/comida%20na%20boca.mp3');
         const eatingSound = new Audio('https://github.com/alexcarequinha/aiai/raw/main/comendo.mp3');
         
+        // LINKS DAS COMIDAS ATUALIZADOS
         const foods = [
-            { id: 'banana', name: 'Banana', price: 10, imageSrc: 'https://upload.wikimedia.org/wikipedia/commons/6/69/Banana.png' },
-            { id: 'bomba', name: 'Bomba', price: 30, imageSrc: 'https://static.vecteezy.com/system/resources/thumbnails/009/350/665/small_2x/explosive-bomb-black-png.png' },
+            { id: 'banana', name: 'Banana', price: 10, imageSrc: 'https://github.com/alexcarequinha/aiai/blob/main/Banana.png?raw=true' },
+            { id: 'bomba', name: 'Bomba', price: 30, imageSrc: 'https://github.com/alexcarequinha/aiai/blob/main/bomba.webp?raw=true' },
             { id: 'calabreso', name: 'Calabreso', price: 70, imageSrc: 'https://github.com/alexcarequinha/aiai/blob/main/cabecograma-330x270-davi.png?raw=true' }
         ];
 
@@ -379,13 +380,12 @@
             }
         }
         function buyStoreItem(item) {
-            if (playerCloset[item.type].includes(item.id)) { return; } // Não mostra mais alert se já possui
+            if (playerCloset[item.type].includes(item.id)) { return; }
             if (money >= item.price) {
                 money -= item.price;
                 playerCloset[item.type].push(item.id);
                 updateMoneyDisplay();
                 populateStore();
-                // ALERT REMOVIDO
             } else { alert("Dinheiro insuficiente!"); }
         }
         function populateCloset() {
