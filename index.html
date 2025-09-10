@@ -10,56 +10,124 @@
     <style>
         :root {
             --bg-color: #F7F9FC;
-            --primary-color: #5C6BC0;
+            --primary-color: #5C6BC0; /* Azul Amigável */
             --primary-dark: #3949AB;
-            --accent-color: #FF7043;
+            --accent-color: #FF7043; /* Laranja-Coral */
             --text-color: #424242;
             --light-grey: #E0E0E0;
             --white: #FFFFFF;
         }
+
         body {
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh; margin: 0; background-color: var(--bg-color);
-            font-family: 'Nunito', sans-serif; overflow: hidden;
-            touch-action: none; position: relative; color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: var(--bg-color);
+            font-family: 'Nunito', sans-serif;
+            overflow: hidden;
+            touch-action: none;
+            position: relative;
+            color: var(--text-color);
         }
+
+        /* --- Interface Geral --- */
         #top-bar, #bottom-bar {
-            position: absolute; left: 0; width: 100%; height: 60px;
-            background-color: var(--primary-color); display: flex;
-            align-items: center; padding: 0 15px; box-sizing: border-box;
-            z-index: 20; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background-color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            box-sizing: border-box;
+            z-index: 20;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
         #top-bar { top: 0; justify-content: space-between; }
         #bottom-bar { bottom: 0; justify-content: space-around; }
+        
         .info-display { background-color: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 8px 16px; font-size: 16px; font-weight: 700; color: var(--primary-dark); }
         .bottom-icon { text-align: center; font-size: 12px; font-weight: 700; color: var(--white); cursor: pointer; padding: 4px; border-radius: 8px; transition: background-color 0.2s ease; }
         .bottom-icon:hover { background-color: rgba(255, 255, 255, 0.1); }
         .bottom-icon img { width: 32px; height: 32px; display: block; margin: 0 auto 4px; object-fit: contain; }
+        
+        /* --- Game Container e Pouminion Principal --- */
         #game-container { position: relative; width: 100vw; height: calc(100vh - 120px); display: flex; justify-content: center; align-items: center; }
         #pouminion-wrapper { position: relative; width: 250px; height: 250px; display: flex; justify-content: center; align-items: center; flex-direction: column; }
         #pou-body { position: absolute; width: 100%; height: 100%; z-index: 1; object-fit: contain; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.15)); transition: filter 0.5s ease; }
         #eyes-container { position: absolute; top: -5%; left: 50%; transform: translateX(-50%); width: 220px; height: 100px; overflow: hidden; z-index: 3; }
         #pou-eyes { position: absolute; width: 100%; height: auto; top: 0; left: 0; transition: transform 0.05s linear; }
-        #pou-mouth { position: absolute; width: 40px; height: 3px; background-color: #3e221a; border-radius: 0 0 35px 35px; bottom: 40%; left: 50%; transform: translateX(-50%); z-index: 2; transition: all 0.15s ease-out; }
-        #pou-mouth.open { height: 20px; width: 40px; }
-        #accessory-display { position: absolute; width: 120px; height: 120px; top: -25%; left: 50%; transform: translateX(-50%); z-index: 4; pointer-events: none; object-fit: contain; display: none; }
+        #pou-mouth { position: absolute; width: 40px; height: 3px; background-color: #3e221a; border-radius: 0 0 35px 35px; bottom: 40%; left: 50%; transform: translateX(-50%); z-index: 2; transition: height 0.15s ease-out, width 0.15s ease-out; }
+        #pou-mouth.open { height: 20px; width: 40px; border-radius: 0 0 40px 40px; }
+        #accessory-display {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            top: -25%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 4;
+            pointer-events: none;
+            object-fit: contain;
+            display: none;
+        }
+
         #food { position: absolute; width: 60px; height: 60px; cursor: grab; z-index: 50; display: none; pointer-events: none; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2)); }
         #food img { width: 100%; height: 100%; object-fit: contain; }
-        #inventory-display { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 15px; z-index: 30; }
-        .inventory-arrow { font-size: 28px; font-weight: 900; color: var(--primary-color); background-color: var(--white); border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); cursor: pointer; user-select: none; transition: all 0.1s ease-in-out; }
+        
+        #inventory-display {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex;
+            align-items: center; gap: 15px; z-index: 30;
+        }
+        .inventory-arrow {
+            font-size: 28px; font-weight: 900; color: var(--primary-color); background-color: var(--white);
+            border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center;
+            align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); cursor: pointer; user-select: none;
+            transition: transform 0.1s ease-in-out, box-shadow 0.2s ease;
+        }
         .inventory-arrow:hover { box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
         .inventory-arrow:active { transform: scale(0.9); }
-        #food-slot-container { position: relative; width: 70px; height: 70px; background-color: var(--white); border: 3px solid var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: grab; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        #food-slot-container {
+            position: relative; width: 70px; height: 70px; background-color: var(--white);
+            border: 3px solid var(--primary-color); border-radius: 50%; display: flex; justify-content: center;
+            align-items: center; cursor: grab; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
         #food-slot-container:active { cursor: grabbing; }
         #slot-food-img { width: 80%; height: 80%; object-fit: contain; }
-        #slot-food-quantity { position: absolute; bottom: -2px; right: -2px; background-color: var(--accent-color); color: white; border-radius: 50%; width: 28px; height: 28px; font-size: 16px; display: flex; justify-content: center; align-items: center; font-weight: 700; border: 3px solid white; }
-        .modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 100; display: none; justify-content: center; align-items: center; }
-        .modal-content { background-color: var(--white); border-radius: 20px; padding: 25px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative; max-height: 80vh; overflow-y: auto; }
+        #slot-food-quantity {
+            position: absolute; bottom: -2px; right: -2px; background-color: var(--accent-color);
+            color: white; border-radius: 50%; width: 28px; height: 28px; font-size: 16px;
+            display: flex; justify-content: center; align-items: center; font-weight: 700; border: 3px solid white;
+        }
+
+        /* --- MODAIS --- */
+        .modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); z-index: 100; display: none;
+            justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background-color: var(--white); border-radius: 20px; padding: 25px;
+            width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative; max-height: 80vh; overflow-y: auto;
+        }
         .modal-title { text-align: center; margin-top: 0; color: var(--primary-dark); font-weight: 900; }
-        .close-modal-btn { position: absolute; top: 15px; right: 20px; font-size: 32px; cursor: pointer; color: var(--light-grey); font-weight: 400; transition: all 0.2s ease; }
+        .close-modal-btn {
+            position: absolute; top: 15px; right: 20px; font-size: 32px;
+            cursor: pointer; color: var(--light-grey); font-weight: 400; transition: transform 0.2s ease, color 0.2s ease;
+        }
         .close-modal-btn:hover { transform: rotate(90deg); color: var(--accent-color); }
+        
         .grid-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .grid-item { background-color: var(--bg-color); border: 2px solid var(--light-grey); border-radius: 15px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
+        .grid-item {
+            background-color: var(--bg-color); border: 2px solid var(--light-grey); border-radius: 15px;
+            padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s;
+            display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+        }
         .grid-item:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); border-color: var(--primary-color); }
         .grid-item.disabled { opacity: 0.6; cursor: not-allowed; background-color: #f5f5f5; }
         .grid-item.disabled:hover { transform: none; box-shadow: none; border-color: var(--light-grey); }
@@ -67,23 +135,76 @@
         .grid-item.equipped { border-color: var(--primary-dark); border-width: 3px; box-shadow: 0 0 15px rgba(92, 107, 192, 0.5); }
         .grid-item img { width: 50px; height: 50px; object-fit: contain; margin-bottom: 5px; }
         .item-name { font-size: 14px; font-weight: 700; min-height: 30px; display: flex; align-items: center; justify-content: center; flex-grow: 1;}
-        .item-price { color: var(--accent-color); font-size: 18px; font-weight: 700; }
-        .item-stock { font-size: 12px; color: #757575; margin-top: 5px; font-weight: 700; }
+        .item-price, .item-stock { font-weight: 700; }
+        .item-price { color: var(--accent-color); font-size: 18px; }
+        .item-stock { font-size: 12px; color: #757575; margin-top: 5px; }
         .category-title { font-weight: 900; color: var(--primary-dark); margin: 20px 0 10px 0; border-bottom: 2px solid var(--light-grey); padding-bottom: 5px; }
-        .color-ball { width: 50px; height: 50px; border-radius: 50%; margin-bottom: 5px; border: 2px solid rgba(0,0,0,0.1); box-sizing: border-box; display: inline-block; vertical-align: middle; }
-        .color-ball.blue { background-color: #00BFFF; } .color-ball.pink { background-color: #FF69B4; }
-        .color-ball.green { background-color: #32CD32; } .color-ball.orange { background-color: #FFA500; }
+
+        .color-ball {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-bottom: 5px;
+            border: 2px solid rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .color-ball.blue { background-color: #00BFFF; }
+        .color-ball.pink { background-color: #FF69B4; }
+        .color-ball.green { background-color: #32CD32; }
+        .color-ball.orange { background-color: #FFA500; }
         .color-ball.purple { background-color: #8A2BE2; }
+        
         .grid-item.equipped .color-ball { border: 3px solid var(--primary-dark); }
         .grid-item.owned .color-ball { border: 2px solid var(--accent-color); }
-        .color-ball.default { background: linear-gradient(45deg, #FFD700 25%, #8A2BE2 25%, #8A2BE2 50%, #32CD32 50%, #32CD32 75%, #FF69B4 75%); }
-        #food-rain-game { width: 100%; height: 100%; background: linear-gradient(to bottom, #81D4FA, #E1F5FE); overflow: hidden; position: relative; display: flex; justify-content: center; }
-        .game-item { position: absolute; width: 50px; height: 50px; background-size: contain; background-repeat: no-repeat; z-index: 5; }
-        #game-player-container { position: absolute; width: 100px; height: 100px; bottom: 60px; left: 50%; transform: translateX(-50%); z-index: 10; background-image: url('imagens/minionjogocomida.png'); background-size: contain; background-repeat: no-repeat; background-position: center; }
-        #game-player-mouth { position: absolute; width: 40px; height: 20px; background-color: #3e221a; border-radius: 0 0 40px 40px; bottom: 35%; left: 50%; transform: translateX(-50%); z-index: 11; }
-        #game-score, #game-over-screen { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); font-size: 24px; font-weight: 900; color: var(--primary-dark); text-shadow: 0 2px 3px var(--white); z-index: 20; }
-        #game-over-screen { top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(255,255,255,0.8); padding: 20px; border-radius: 15px; text-align: center; display: none; z-index: 20; }
-        #game-over-screen button { background-color: var(--accent-color); color: var(--white); border: none; border-radius: 10px; padding: 10px 20px; font-size: 18px; font-weight: 700; cursor: pointer; margin-top: 15px; }
+        .color-ball.default {
+            background: linear-gradient(45deg, #FFD700 25%, #8A2BE2 25%, #8A2BE2 50%, #32CD32 50%, #32CD32 75%, #FF69B4 75%);
+        }
+
+        /* --- JOGO: CHUVA DE COMIDAS --- */
+        #food-rain-game {
+            width: 100%; height: 100%; background: linear-gradient(to bottom, #81D4FA, #E1F5FE);
+            overflow: hidden; position: relative; display: flex; justify-content: center;
+        }
+        .game-item {
+            position: absolute; width: 50px; height: 50px;
+            background-size: contain; background-repeat: no-repeat; z-index: 5;
+        }
+        #game-player-container {
+            position: absolute; width: 100px; height: 100px; bottom: 60px;
+            left: 50%; transform: translateX(-50%); z-index: 10;
+            background-image: url('/pouminion/imagens/minionjogocomida.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        #game-player-mouth {
+            position: absolute; width: 40px; height: 20px; background-color: #3e221a;
+            border-radius: 0 0 40px 40px; bottom: 35%; left: 50%;
+            transform: translateX(-50%); z-index: 11;
+        }
+        #game-score, #game-over-screen {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            font-size: 24px; font-weight: 900; color: var(--primary-dark);
+            text-shadow: 0 2px 3px var(--white); z-index: 20;
+        }
+        #game-over-screen {
+            top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(255,255,255,0.8);
+            padding: 20px; border-radius: 15px; text-align: center; display: none; z-index: 20;
+        }
+        #game-over-screen button {
+            background-color: var(--accent-color); color: var(--white); border: none;
+            border-radius: 10px; padding: 10px 20px; font-size: 18px;
+            font-weight: 700; cursor: pointer; margin-top: 15px;
+        }
+
+        @media (max-width: 600px) {
+            #top-bar, #bottom-bar { height: 55px; }
+            #game-container { height: calc(100vh - 110px); }
+            #pouminion-wrapper { width: 200px; height: 200px; }
+            #game-player-container { width: 80px; height: 80px; bottom: 50px;}
+        }
     </style>
 </head>
 <body>
@@ -95,8 +216,8 @@
     <div id="game-container">
         <div id="pouminion-wrapper">
             <img id="accessory-display" src="">
-            <div id="eyes-container"><img id="pou-eyes" src="imagens/olhominio.png" alt="Olhos do Pouminion"></div>
-            <img id="pou-body" src="imagens/corpominio.png" alt="Corpo do Pouminion">
+            <div id="eyes-container"><img id="pou-eyes" src="/pouminion/imagens/olhominio.png" alt="Olhos do Pouminion"></div>
+            <img id="pou-body" src="/pouminion/imagens/corpominio.png" alt="Corpo do Pouminion">
             <div id="pou-mouth"></div>
         </div>
         
@@ -153,10 +274,10 @@
     </div>
 
     <div id="bottom-bar">
-        <div id="home-button" class="bottom-icon"> <img src="imagens/Casa.png" alt="Casa"> Casa </div>
-        <div id="kitchen-button" class="bottom-icon"> <img src="imagens/Geladeira.png" alt="Cozinha"> Cozinha </div>
-        <div id="store-button" class="bottom-icon"> <img src="imagens/Loja.png" alt="Loja"> Loja </div>
-        <div id="games-button" class="bottom-icon"> <img src="imagens/Jogos.png" alt="Controle de Jogo"> Jogos </div>
+        <div id="home-button" class="bottom-icon"> <img src="/pouminion/imagens/casa.png" alt="Casa"> Casa </div>
+        <div id="kitchen-button" class="bottom-icon"> <img src="/pouminion/imagens/geladeira.png" alt="Cozinha"> Cozinha </div>
+        <div id="store-button" class="bottom-icon"> <img src="/pouminion/imagens/loja.png" alt="Loja"> Loja </div>
+        <div id="games-button" class="bottom-icon"> <img src="/pouminion/imagens/jogos.png" alt="Controle de Jogo"> Jogos </div>
     </div>
 
     <script>
@@ -194,13 +315,13 @@
         let money = 500;
         let isDragging = false;
         
-        const nearMouthSound = new Audio('imagens/comida na boca.mp3');
-        const eatingSound = new Audio('imagens/comendo.mp3');
+        const nearMouthSound = new Audio('https://github.com/alexcarequinha/aiai/raw/main/comida%20na%20boca.mp3');
+        const eatingSound = new Audio('https://github.com/alexcarequinha/aiai/raw/main/comendo.mp3');
         
         const foods = [
-            { id: 'banana', name: 'Banana', price: 10, imageSrc: 'imagens/Banana.png' },
-            { id: 'bomba', name: 'Bomba', price: 30, imageSrc: 'imagens/bomba.webp' },
-            { id: 'calabreso', name: 'Calabreso', price: 70, imageSrc: 'imagens/cabecograma-330x270-davi.png' }
+            { id: 'banana', name: 'Banana', price: 10, imageSrc: '/pouminion/imagens/Banana.png' },
+            { id: 'bomba', name: 'Bomba', price: 30, imageSrc: '/pouminion/imagens/bomba.webp' },
+            { id: 'calabreso', name: 'Calabreso', price: 70, imageSrc: '/pouminion/imagens/cabecograma-330x270-davi.png' }
         ];
 
         const storeItems = [
@@ -258,7 +379,7 @@
             }
         }
         function buyStoreItem(item) {
-            if (playerCloset[item.type].includes(item.id)) { return; }
+            if (playerCloset[item.type].includes(item.id)) { return; } 
             if (money >= item.price) {
                 money -= item.price;
                 playerCloset[item.type].push(item.id);
@@ -277,7 +398,7 @@
                 const unequipAccessoryBtn = document.createElement('div');
                 unequipAccessoryBtn.className = 'grid-item';
                 if (equippedItems.accessory === null) unequipAccessoryBtn.classList.add('equipped');
-                unequipAccessoryBtn.innerHTML = `<img src="https://i.imgur.com/sFcyhTj.png" alt="Nenhum"><div class="item-name">Nenhum</div>`;
+                unequipAccessoryBtn.innerHTML = `<div style="width: 50px; height: 50px; border: 2px dashed #ccc; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #ccc; margin-bottom: 5px;">Ø</div><div class="item-name">Nenhum</div>`;
                 unequipAccessoryBtn.addEventListener('click', () => equipItem(null, 'accessory'));
                 accessoriesContainer.appendChild(unequipAccessoryBtn);
                 accessories.forEach(item => {
